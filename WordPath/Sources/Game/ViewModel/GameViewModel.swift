@@ -121,7 +121,23 @@ final class GameViewModel: ObservableObject {
 
     func tapCell(_ cell: Cell) {
         guard status == .running else { return }
-        addToSelectionIfValid(cell.pos)
+        let pos = cell.pos
+
+        // 1) Si tocas la ÚLTIMA seleccionada -> DESHACER
+        if let last = selectedPath.last, last == pos {
+            withAnimation { _ = selectedPath.popLast() }
+            Haptics.tap()
+            SFX.blip()
+            return
+        }
+
+        // 2) Si ya estaba seleccionada pero NO es la última -> IGNORAR (no permite deshacer intermedio)
+        if selectedPath.contains(pos) {
+            return
+        }
+
+        // 3) En otro caso, intenta añadir si es adyacente y no repetida
+        addToSelectionIfValid(pos)
     }
 
     func beginDrag() {
