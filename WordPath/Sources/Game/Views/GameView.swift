@@ -91,17 +91,27 @@ struct GameView: View {
     private var grid: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.fixed(cellSize), spacing: spacing), count: 4), spacing: spacing) {
             ForEach(vm.cells) { cell in
-                CellView(cell: cell,
-                         selected: vm.selectedPath.contains(cell.pos),
-                         highlight: highlightState(for: cell))
-                    .frame(width: cellSize, height: cellSize)
-                    .onTapGesture { vm.tapCell(cell) }
-                    .overlay(alignment: .topLeading) {
-                        if vm.hintRevealed && vm.status == .running && cell.pos == vm.embeddedPath.first {
-                            Text("★").font(.caption)
-                        }
+                // Calcula el índice de selección (1-based) si esta celda está en la ruta seleccionada
+                let order: Int? = {
+                    if let idx = vm.selectedPath.firstIndex(of: cell.pos) { return idx + 1 }
+                    return nil
+                }()
+
+                CellView(
+                    cell: cell,
+                    selected: vm.selectedPath.contains(cell.pos),
+                    highlight: highlightState(for: cell),
+                    orderIndex: order                // ← NUEVO
+                )
+                .frame(width: cellSize, height: cellSize)
+                .onTapGesture { vm.tapCell(cell) }
+                // Estrella de pista arriba-izquierda (se mantiene como antes)
+                .overlay(alignment: .topLeading) {
+                    if vm.hintRevealed && vm.status == .running && cell.pos == vm.embeddedPath.first {
+                        Text("★").font(.caption)
                     }
-                    .accessibilityLabel(String(cell.letter))
+                }
+                .accessibilityLabel(String(cell.letter))
             }
         }
         .padding(.vertical, 8)
