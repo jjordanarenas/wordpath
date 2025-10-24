@@ -87,7 +87,10 @@ final class GameViewModel: ObservableObject {
         status = .finished(win: win)
         timer?.invalidate(); timer = nil
         if win { Haptics.success(); SFX.success(); GameCenterService.shared.submit(score: scoreAwarded, leaderboardID: "wordpath.best") }
-        else { Haptics.error(); SFX.error() }
+        else {
+            Haptics.error(); SFX.error()
+            selectedPath.removeAll()
+        }
     }
 
     private func startTimer() {
