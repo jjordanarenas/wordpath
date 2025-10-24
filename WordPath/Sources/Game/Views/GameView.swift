@@ -92,7 +92,7 @@ struct GameView: View {
         LazyVGrid(columns: Array(repeating: GridItem(.fixed(cellSize), spacing: spacing), count: 4), spacing: spacing) {
             ForEach(vm.cells) { cell in
                 // Calcula el índice de selección (1-based) si esta celda está en la ruta seleccionada
-                    let order: Int? = {
+                let order: Int? = {
                     if case .finished(let win) = vm.status, !win {
                         // Estamos enseñando la solución: numerar el camino correcto
                         if let idx = vm.embeddedPath.firstIndex(of: cell.pos), idx <= revealStep {
