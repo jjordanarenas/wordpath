@@ -147,7 +147,9 @@ struct GameView: View {
             Spacer()
 
             Button("Leaderboard") {
-                GameCenterService.shared.showLeaderboards()
+                Task { @MainActor in GameCenterService.shared.showLeaderboards() }
+
+                // GameCenterService.shared.showLeaderboards()
             }
         }
     }

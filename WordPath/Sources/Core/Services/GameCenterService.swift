@@ -11,9 +11,10 @@ import GameKit
 import UIKit
 
 @MainActor
-final class GameCenterService: ObservableObject {
+final class GameCenterService: NSObject, ObservableObject {
     static let shared = GameCenterService()
-    private init() {}
+    //private init() {}
+    private override init() { super.init() }
 
     func authenticate() async {
         GKAccessPoint.shared.location = .topLeading
@@ -60,16 +61,65 @@ final class GameCenterService: ObservableObject {
         }
     }
 
-    func showLeaderboards() {
+    /*func showLeaderboards() {
         GKAccessPoint.shared.trigger(state: .leaderboards) {
             print("Leaderboard attempted to open.")
         }
+    }*/
+    func showLeaderboards() {
+        guard GKLocalPlayer.local.isAuthenticated else {
+            // Si no estás autenticado, intenta autenticación y luego presenta
+            Task {
+                await authenticate()
+                presentLeaderboardsModal()
+            }
+            return
+        }
+
+        // iOS 17+: primero intentamos el AccessPoint…
+        if #available(iOS 17.0, *) {
+            GKAccessPoint.shared.isActive = true
+            GKAccessPoint.shared.location = .topLeading
+            GKAccessPoint.shared.trigger(state: .leaderboards) {
+                // Si en tu dispositivo “no hace nada”, usamos el fallback modal:
+                // (Este handler no indica éxito/fracaso; por eso usamos modal si ves que no aparece)
+            }
+        }
+
+        // Fallback universal y pre-iOS17: modal (fiable)
+        presentLeaderboardsModal()
     }
 
+    private func presentLeaderboardsModal() {
+        if #available(iOS 14.0, *) {
+            let gcVC = GKGameCenterViewController(state: .leaderboards)
+            gcVC.gameCenterDelegate = self
+            present(gcVC)
+        } else {
+            // iOS 13 y anteriores
+            let gcVC = GKGameCenterViewController()
+            gcVC.gameCenterDelegate = self
+            gcVC.viewState = .leaderboards
+            present(gcVC)
+        }
+    }
 
-    private func present(_ vc: UIViewController) {
+    /*private func present(_ vc: UIViewController) {
         guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let root = scene.windows.first?.rootViewController else { return }
         root.present(vc, animated: true)
+    }*/
+    private func present(_ vc: UIViewController) {
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let root = scene.windows.first?.rootViewController else { return }
+        var top = root
+        while let presented = top.presentedViewController { top = presented }
+        top.present(vc, animated: true)
+    }
+}
+
+extension GameCenterService: GKGameCenterControllerDelegate {
+    func gameCenterViewControllerDidFinish(_ gameCenterViewController: GKGameCenterViewController) {
+        gameCenterViewController.dismiss(animated: true)
     }
 }
