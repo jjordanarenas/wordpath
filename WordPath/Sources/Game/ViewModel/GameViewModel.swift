@@ -27,12 +27,26 @@ final class GameViewModel: ObservableObject {
 
     // Drag
     @Published var isDragging: Bool = false
+
+    @Published var hintedIndices: Set<Int> = []       // índices 0..9 en embeddedPath
+
     private var lastDragCell: GridPos? = nil
+
+    // Dependencias
+    private let economy = EconomyManager.shared
+    private let subs = SubscriptionManager.shared
 
     // Interno
     private var timer: Timer?
     private var lastEliminationTick: Int = 0
     private var wordsPool: [String] = ES10
+
+    // Exponer saldos a la vista
+    var attempts: Int { economy.attempts }
+    var coins: Int { economy.coins }
+    var canPlay: Bool { economy.canPlay }
+    var rechargeRemaining: TimeInterval? { economy.timeUntilRecharge() }
+    var isPremium: Bool { subs.isPremium }
 
     enum Status: Equatable {
         case ready
@@ -53,7 +67,11 @@ final class GameViewModel: ObservableObject {
 
     // MARK: Ciclo de ronda
 
+    // Llamar al empezar (botón Jugar)
     func startRound() {
+        guard canPlay else { return } // la vista ya muestra CTA “ver anuncio/suscribirse”
+        do { try economy.startGame() } catch { return }
+
         hintRevealed = false
         selectedPath = []
         scoreAwarded = 0
@@ -81,6 +99,31 @@ final class GameViewModel: ObservableObject {
 
         startTimer()
         Haptics.select(); SFX.tick()
+        hintedIndices.removeAll()
+    }
+
+    // Botón “Usar pista (5)”
+    func useHint() {
+        guard status == .running else { return }
+        do {
+            try economy.spendCoins(EconomyConfig.hintCostCoins)
+        } catch {
+            // opcional: mostrar alerta “no tienes coins”
+            return
+        }
+        // elegir índice no revelado / no seleccionado
+        let path = embeddedPath
+        let selectedSet = Set(selectedPath)
+        let available = path.enumerated()
+            .filter { (i, pos) in !hintedIndices.contains(i) && !selectedSet.contains(pos) }
+            .map { $0.offset }
+        guard let idx = available.randomElement() else { return }
+        hintedIndices.insert(idx)
+        Haptics.select(); SFX.blip()
+        // (opcional) coins por “usar pista” si premium (misión diaria)
+        if isPremium {
+            try? economy.addCoins(EconomyConfig.coinsUseHintPremium, source: .useHint)
+        }
     }
 
     func stopRound(win: Bool) {
@@ -208,5 +251,11 @@ final class GameViewModel: ObservableObject {
         default:
             return 0
         }
+    }
+
+    // Al abrir app o tab principal
+    func onAppearEconomyTick() {
+        EconomyManager.shared.dailyResetIfNeeded()
+        EconomyManager.shared.tickRechargeIfNeeded()
     }
 }
