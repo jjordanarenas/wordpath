@@ -11,6 +11,7 @@ import SwiftUI
 struct GameView: View {
     @StateObject private var vm = GameViewModel()
     @State private var revealStep: Int = -1
+    @State private var showShare = false
 
     // Métricas
     private let cellSize: CGFloat = 72
@@ -26,6 +27,46 @@ struct GameView: View {
         .padding(16)
         .onAppear { vm.onAppearEconomyTick() }
         .onChange(of: vm.status) { _, st in if case .finished = st { startRevealAnimation() } }
+        // 👇 Aquí, después de todo, añadimos el sheet
+        .overlay {
+            if case .finished(let win) = vm.status {
+                EndOfRoundBanner(
+                    win: win,
+                    score: vm.scoreAwarded,
+                    targetWord: vm.targetWord,
+                    onPlayAgain: { vm.startRound() },
+                    onLeaderboard: { GameCenterService.shared.showLeaderboards() },
+                    onShare: { showShare = true }
+                )
+                .animation(.spring(), value: vm.status)
+            }
+        }
+
+        // 👇 Este sheet se presenta cuando showShare == true
+        .sheet(isPresented: $showShare) {
+            let text = vm.status == .finished(win: true)
+                ? "¡He conseguido \(vm.scoreAwarded) puntos en WordPath! ¿Puedes superarlo?"
+                : "Hoy no la acerté en WordPath. La palabra era \(vm.targetWord). ¡Rétame!"
+
+            ShareSheet(items: [text]) { completed in
+                if completed {
+                    // ✅ Marca la misión
+                    MissionsManager.shared.markProgress(.share)
+
+                    // ✅ Pequeño retardo para cerrar el sheet y luego reiniciar
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        showShare = false
+                        // Cierra el banner reiniciando partida
+                        withAnimation(.spring()) {
+                            vm.startRound()
+                        }
+                    }
+                } else {
+                    // Si cancela, simplemente cierra el sheet
+                    showShare = false
+                }
+            }
+        }
     }
 
     private var header: some View {
@@ -197,7 +238,21 @@ struct GameView: View {
 
             Spacer()
 
-            Button("Leaderboard") { Task { @MainActor in GameCenterService.shared.showLeaderboards() } }
+            // 👇 Nuevo botón para abrir pantalla Economía
+            NavigationLink("Economía") {
+                EconomyView()
+            }
+            .buttonStyle(.bordered)
+
+            // 👇 Nuevo botón para abrir pantalla de suscripción
+            NavigationLink("WordPath+") {
+                SubscriptionView()
+            }
+            .buttonStyle(.borderedProminent)
+
+            Button("Leaderboard") {
+                Task { @MainActor in GameCenterService.shared.showLeaderboards() }
+            }
         }
     }
 

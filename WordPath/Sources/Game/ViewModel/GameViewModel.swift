@@ -120,6 +120,9 @@ final class GameViewModel: ObservableObject {
         guard let idx = available.randomElement() else { return }
         hintedIndices.insert(idx)
         Haptics.select(); SFX.blip()
+
+        MissionsManager.shared.markProgress(.useHint)
+
         // (opcional) coins por “usar pista” si premium (misión diaria)
         if isPremium {
             try? economy.addCoins(EconomyConfig.coinsUseHintPremium, source: .useHint)
@@ -129,7 +132,14 @@ final class GameViewModel: ObservableObject {
     func stopRound(win: Bool) {
         status = .finished(win: win)
         timer?.invalidate(); timer = nil
-        if win { Haptics.success(); SFX.success(); GameCenterService.shared.submit(score: scoreAwarded, leaderboardID: "wordpath.best") }
+        // ✅ MISIÓN: ha jugado 1 partida (incrementa progreso de play1 y play3)
+        MissionsManager.shared.markProgress(.play1)
+        MissionsManager.shared.markProgress(.play3)
+
+        if win {
+            Haptics.success();
+            SFX.success();
+            GameCenterService.shared.submit(score: scoreAwarded, leaderboardID: "wordpath.best") }
         else {
             Haptics.error(); SFX.error()
             selectedPath.removeAll()
