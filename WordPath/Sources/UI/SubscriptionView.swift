@@ -5,12 +5,12 @@
 //  Created by Jorge Jordán on 28/10/25.
 //
 
-
 import SwiftUI
 import StoreKit
 
 struct SubscriptionView: View {
     @ObservedObject var subs = SubscriptionManager.shared
+    @ObservedObject var theme = ThemeManager.shared    // 👈 añadido
 
     var body: some View {
         VStack(spacing: 16) {
@@ -37,6 +37,7 @@ struct SubscriptionView: View {
             Spacer()
         }
         .padding()
+        .background(theme.current.background.ignoresSafeArea())  // opcional
         .navigationTitle("WordPath+")
     }
 
@@ -44,9 +45,10 @@ struct SubscriptionView: View {
         VStack(spacing: 8) {
             Text("Desbloquea WordPath+")
                 .font(.title.bold())
+                .foregroundStyle(theme.current.textPrimary)
             Text("Partidas ilimitadas, misiones Premium y más opciones de personalización.")
                 .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(theme.current.textSecondary)
         }
     }
 
@@ -54,10 +56,12 @@ struct SubscriptionView: View {
         HStack {
             VStack(alignment: .leading) {
                 Text(product.displayName).font(.headline)
-                Text(product.description).font(.caption).foregroundStyle(.secondary)
+                    .foregroundStyle(theme.current.textPrimary)
+                Text(product.description).font(.caption).foregroundStyle(theme.current.textSecondary)
             }
             Spacer()
             Text(product.displayPrice).font(.headline)
+                .foregroundStyle(theme.current.textPrimary)
             Button(subs.purchasing ? "Comprando…" : "Suscribirse") {
                 Task { await subs.purchase(product) }
             }
@@ -65,6 +69,6 @@ struct SubscriptionView: View {
             .disabled(subs.purchasing)
         }
         .padding()
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .themedBackground(theme.current.cardBackground, cornerRadius: 16)   // 👈 aquí
     }
 }

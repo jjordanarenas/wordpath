@@ -11,6 +11,7 @@ struct EconomyView: View {
     @ObservedObject var economy = EconomyManager.shared
     @ObservedObject var subs = SubscriptionManager.shared
     @ObservedObject var missions = MissionsManager.shared
+    @ObservedObject var theme = ThemeManager.shared      // 👈 añadido
 
     @State private var showAdResult = ""
     let adService: RewardedAdService = AdMobRewardedStub.shared
@@ -25,12 +26,13 @@ struct EconomyView: View {
             }
             .padding()
         }
+        .background(theme.current.background.ignoresSafeArea())  // opcional, para unificar estilo
         .navigationTitle("Economía")
         .onAppear {
             MissionsManager.shared.dailyResetIfNeeded()
             EconomyManager.shared.dailyResetIfNeeded()
             EconomyManager.shared.tickRechargeIfNeeded()
-            MissionsManager.shared.markProgress(.login)      // ✅ por si no se marcó antes
+            missions.markProgress(.login)
         }
     }
 
@@ -46,6 +48,7 @@ struct EconomyView: View {
             Text("Coins: \(economy.coins)")
         }
         .font(.headline.monospacedDigit())
+        .foregroundStyle(theme.current.textPrimary)
     }
 
     private var attemptsCard: some View {
@@ -53,16 +56,9 @@ struct EconomyView: View {
             Text("Intentos")
                 .font(.title3.bold())
             Text(subs.isPremium ? "Ilimitados por ser Premium." : "Tienes \(economy.attempts) intentos. Al llegar a 0, se recargan 10 tras 24 horas.")
-
-            if !subs.isPremium {
-                Button("Obtener +\(EconomyConfig.rewardedAttemptsAmount) viendo un anuncio (1/día)") {
-                    Task { await watchRewarded() }
-                }
-                .buttonStyle(.borderedProminent)
-            }
         }
         .padding()
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .themedBackground(theme.current.cardBackground, cornerRadius: 16)   // 👈 aquí
     }
 
     private var coinsCard: some View {
@@ -72,21 +68,20 @@ struct EconomyView: View {
             Text("Gana coins con misiones diarias. Límite diario: \(subs.isPremium ? EconomyConfig.premiumDailyCoinsCap : EconomyConfig.freeDailyCoinsCap).")
         }
         .padding()
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .themedBackground(theme.current.cardBackground, cornerRadius: 16)
     }
 
     private var missionsCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Misiones diarias")
                 .font(.title3.bold())
-
             ForEach(MissionType.allCases) { t in
                 missionRow(type: t)
                 Divider().opacity(0.2)
             }
         }
         .padding()
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
+        .themedBackground(theme.current.cardBackground, cornerRadius: 16)
     }
 
     private func missionRow(type: MissionType) -> some View {
@@ -94,9 +89,10 @@ struct EconomyView: View {
         return HStack {
             VStack(alignment: .leading) {
                 Text(title(for: type))
+                    .foregroundStyle(theme.current.textPrimary)
                 Text("Progreso: \(m.progress)/\(m.goal) · Recompensa: \(m.rewardCoins) 🟡")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(theme.current.textSecondary)
             }
             Spacer()
             if missions.canClaim(type) {
@@ -126,18 +122,5 @@ struct EconomyView: View {
         let s = Int(max(0, seconds))
         let h = s / 3600, m = (s % 3600) / 60, sec = s % 60
         return h > 0 ? String(format: "%d:%02d:%02d", h, m, sec) : String(format: "%d:%02d", m, sec)
-    }
-
-    private func watchRewarded() async {
-        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let root = scene.windows.first?.rootViewController else { return }
-        await adService.load()
-        if await adService.present(from: root) {
-            do {
-                try economy.grantRewardedAttempts()
-            } catch {
-                print("Reward attempts error: \(error.localizedDescription)")
-            }
-        }
     }
 }

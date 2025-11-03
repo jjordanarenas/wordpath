@@ -11,11 +11,13 @@ import SwiftUI
 struct WordPathApp: App {
     var body: some Scene {
         WindowGroup {
-            GameView()
-                .preferredColorScheme(.dark)
-                .task {
-                    await GameCenterService.shared.authenticate()
-                }
+            NavigationStack {        // 👈 Aquí envolvemos el GameView
+                HomeView()
+            }
+            .preferredColorScheme(.dark)
+            .task {
+                await GameCenterService.shared.authenticate()
+            }
         }
     }
 }

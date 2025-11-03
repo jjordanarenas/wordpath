@@ -5,29 +5,40 @@
 //  Created by Jorge Jordán on 21/10/25.
 //
 
-
 import SwiftUI
 
 struct GameView: View {
     @StateObject private var vm = GameViewModel()
+    @ObservedObject private var theme = ThemeManager.shared
+
     @State private var revealStep: Int = -1
     @State private var showShare = false
 
-    // Métricas
     private let cellSize: CGFloat = 72
     private let spacing: CGFloat = 12
 
     var body: some View {
-        VStack(spacing: 12) {
-            header
-            topBars
-            gridWithDrag
-            controls
+        ZStack {
+            // FONDO DEL TEMA
+            theme.current.background
+                .ignoresSafeArea()
+
+            VStack(spacing: 12) {
+                header
+                topBars
+                gridWithDrag
+                controls
+            }
+            .padding(16)
         }
-        .padding(16)
-        .onAppear { vm.onAppearEconomyTick() }
-        .onChange(of: vm.status) { _, st in if case .finished = st { startRevealAnimation() } }
-        // 👇 Aquí, después de todo, añadimos el sheet
+        .onAppear {
+            vm.onAppearEconomyTick()
+        }
+        .onChange(of: vm.status) { _, st in
+            if case .finished = st {
+                startRevealAnimation()
+            }
+        }
         .overlay {
             if case .finished(let win) = vm.status {
                 EndOfRoundBanner(
@@ -35,61 +46,66 @@ struct GameView: View {
                     score: vm.scoreAwarded,
                     targetWord: vm.targetWord,
                     onPlayAgain: { vm.startRound() },
-                    onLeaderboard: { GameCenterService.shared.showLeaderboards() },
+                    onLeaderboard: {
+                        Task { @MainActor in
+                            GameCenterService.shared.showLeaderboards()
+                        }
+                    },
                     onShare: { showShare = true }
                 )
-                .animation(.spring(), value: vm.status)
             }
         }
-
-        // 👇 Este sheet se presenta cuando showShare == true
         .sheet(isPresented: $showShare) {
             let text = vm.status == .finished(win: true)
                 ? "¡He conseguido \(vm.scoreAwarded) puntos en WordPath! ¿Puedes superarlo?"
                 : "Hoy no la acerté en WordPath. La palabra era \(vm.targetWord). ¡Rétame!"
-
             ShareSheet(items: [text]) { completed in
                 if completed {
-                    // ✅ Marca la misión
                     MissionsManager.shared.markProgress(.share)
-
-                    // ✅ Pequeño retardo para cerrar el sheet y luego reiniciar
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         showShare = false
-                        // Cierra el banner reiniciando partida
                         withAnimation(.spring()) {
                             vm.startRound()
                         }
                     }
                 } else {
-                    // Si cancela, simplemente cierra el sheet
                     showShare = false
                 }
             }
         }
     }
 
+    // MARK: Header
     private var header: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("WORDPATH").font(.title.bold())
+                Text("WORDPATH")
+                    .font(.title.bold())
+                    .foregroundStyle(theme.current.textPrimary)
+
                 if vm.hintRevealed || vm.status != .running {
                     Text("Empieza por: \(vm.targetWord.first.map { String($0) } ?? "?")")
                         .font(.footnote.monospaced())
+                        .foregroundStyle(theme.current.textSecondary)
                         .transition(.opacity)
                 } else {
-                    Text(" ") // placeholder para mantener altura
+                    Text(" ")
                         .font(.footnote)
                         .opacity(0)
                 }
             }
+
             Spacer()
-            VStack(alignment: .trailing) {
-                Text("Tiempo")
-                Text(timeString(vm.secondsLeft))
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .contentTransition(.numericText())
-                if case .finished(let win) = vm.status {
+
+            VStack(alignment: .trailing, spacing: 2) {
+                if vm.status == .running {
+                    Text("Tiempo")
+                        .foregroundStyle(theme.current.textSecondary)
+                    Text(timeString(vm.secondsLeft))
+                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .foregroundStyle(theme.current.textPrimary)
+                        .contentTransition(.numericText())
+                } else if case .finished(let win) = vm.status {
                     Text(win ? "+\(vm.scoreAwarded)" : "💔")
                         .font(.headline)
                         .foregroundStyle(win ? .green : .red)
@@ -98,25 +114,27 @@ struct GameView: View {
         }
     }
 
-    // MARK: Top bars with attempts/coins
+    // MARK: Top bar (intentos + coins)
     private var topBars: some View {
         HStack {
-            // Intentos (energía)
             HStack(spacing: 6) {
                 Text("💛 \(vm.attempts)")
                     .font(.headline.monospacedDigit())
+                    .foregroundStyle(theme.current.textPrimary)
                 if let remain = vm.rechargeRemaining, vm.attempts == 0 {
-                    Text("⏳ \(format(remain))").font(.caption).foregroundStyle(.secondary)
+                    Text("⏳ \(format(remain))")
+                        .font(.caption)
+                        .foregroundStyle(theme.current.textSecondary)
                 }
             }
             Spacer()
-            // Coins
             Text("🟡 \(vm.coins)")
                 .font(.headline.monospacedDigit())
+                .foregroundStyle(theme.current.textPrimary)
         }
     }
 
-    // MARK: Grid + numbering logic
+    // MARK: Grid
     private var gridWithDrag: some View {
         GeometryReader { proxy in
             let gridSide = cellSize * 4 + spacing * 3
@@ -124,23 +142,24 @@ struct GameView: View {
                 LazyVGrid(columns: Array(repeating: GridItem(.fixed(cellSize), spacing: spacing), count: 4), spacing: spacing) {
                     ForEach(vm.cells) { cell in
                         let orderInfo = orderFor(cell: cell)
-                        CellView(
+                        ThemedCell(
                             cell: cell,
                             selected: vm.selectedPath.contains(cell.pos),
-                            highlight: highlightState(for: cell),
+                            glow: glowState(for: cell),
                             orderIndex: orderInfo.number,
-                            isHintNumber: orderInfo.isHint
+                            isHint: orderInfo.isHint,
+                            theme: theme.current
                         )
                         .frame(width: cellSize, height: cellSize)
                         .onTapGesture { vm.tapCell(cell) }
                         .overlay(alignment: .topLeading) {
                             if vm.hintRevealed && vm.status == .running && cell.pos == vm.embeddedPath.first {
-                                Text("★").font(.caption)
+                                Text("★").font(.caption).foregroundStyle(.yellow)
                             }
                         }
                     }
                 }
-                // Drag overlay
+
                 Rectangle().fill(.clear).frame(width: gridSide, height: gridSide)
                     .highPriorityGesture(
                         DragGesture(minimumDistance: 0)
@@ -162,47 +181,39 @@ struct GameView: View {
         .frame(height: cellSize * 4 + spacing * 3 + 8)
     }
 
-    /*private var grid: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.fixed(cellSize), spacing: spacing), count: 4), spacing: spacing) {
-            ForEach(vm.cells) { cell in
-                // Calcula el índice de selección (1-based) si esta celda está en la ruta seleccionada
-                let order: Int? = {
-                    if case .finished(let win) = vm.status, !win {
-                        // Estamos enseñando la solución: numerar el camino correcto
-                        if let idx = vm.embeddedPath.firstIndex(of: cell.pos), idx <= revealStep {
-                            return idx + 1 // 1-based
-                        }
-                        return nil
-                    } else {
-                        // Juego en curso o ganó: numerar la selección del jugador
-                        if let idx = vm.selectedPath.firstIndex(of: cell.pos) {
-                            return idx + 1 // 1-based
-                        }
-                        return nil
-                    }
-                }()
-
-                CellView(
-                    cell: cell,
-                    selected: vm.selectedPath.contains(cell.pos),
-                    highlight: highlightState(for: cell),
-                    orderIndex: order                // ← NUEVO
-                )
-                .frame(width: cellSize, height: cellSize)
-                .onTapGesture { vm.tapCell(cell) }
-                // Estrella de pista arriba-izquierda (se mantiene como antes)
-                .overlay(alignment: .topLeading) {
-                    if vm.hintRevealed && vm.status == .running && cell.pos == vm.embeddedPath.first {
-                        Text("★").font(.caption)
-                    }
-                }
-                .accessibilityLabel(String(cell.letter))
+    // MARK: Controls – SOLO gameplay
+    private var controls: some View {
+        HStack(spacing: 8) {
+            Button(vm.status == .running ? "Reiniciar" : "Jugar") {
+                vm.startRound()
             }
-        }
-        .padding(.vertical, 8)
-    }*/
+            .buttonStyle(.borderedProminent)
+            .tint(.white)
+            .foregroundStyle(.indigo)
+            .disabled(!vm.canPlay && vm.status != .running)
 
-    // Números a mostrar: solución (tras perder) -> revealStep; si no, selección o pista
+            Button("Usar pista (5)") {
+                vm.useHint()
+            }
+            .buttonStyle(.bordered)
+            .tint(.white.opacity(0.3))
+            .disabled(!(vm.status == .running) || vm.coins < EconomyConfig.hintCostCoins)
+
+            Spacer()
+
+            Button {
+                Task { @MainActor in
+                    GameCenterService.shared.showLeaderboards()
+                }
+            } label: {
+                Image(systemName: "trophy.fill")
+            }
+            .buttonStyle(.bordered)
+            .tint(.yellow.opacity(0.7))
+        }
+    }
+
+    // MARK: Helpers
     private func orderFor(cell: Cell) -> (number: Int?, isHint: Bool) {
         if case .finished(let win) = vm.status, !win {
             if let idx = vm.embeddedPath.firstIndex(of: cell.pos), idx <= revealStep {
@@ -218,45 +229,15 @@ struct GameView: View {
         }
     }
 
-    private func highlightState(for cell: Cell) -> CellView.Highlight {
+    private func glowState(for cell: Cell) -> Bool {
         if case .finished = vm.status {
-            if let step = vm.embeddedPath.firstIndex(of: cell.pos) { return step <= revealStep ? .glow : .none }
-        }
-        return vm.selectedPath.contains(cell.pos) ? .selected : .none
-    }
-
-    // MARK: Controls row
-    private var controls: some View {
-        HStack(spacing: 8) {
-            Button(vm.status == .running ? "Reiniciar" : "Jugar") { vm.startRound() }
-                .buttonStyle(.borderedProminent)
-                .disabled(!vm.canPlay && vm.status != .running)
-
-            Button("Usar pista (5)") { vm.useHint() }
-                .buttonStyle(.bordered)
-                .disabled(!(vm.status == .running) || vm.coins < EconomyConfig.hintCostCoins)
-
-            Spacer()
-
-            // 👇 Nuevo botón para abrir pantalla Economía
-            NavigationLink("Economía") {
-                EconomyView()
-            }
-            .buttonStyle(.bordered)
-
-            // 👇 Nuevo botón para abrir pantalla de suscripción
-            NavigationLink("WordPath+") {
-                SubscriptionView()
-            }
-            .buttonStyle(.borderedProminent)
-
-            Button("Leaderboard") {
-                Task { @MainActor in GameCenterService.shared.showLeaderboards() }
+            if let step = vm.embeddedPath.firstIndex(of: cell.pos) {
+                return step <= revealStep
             }
         }
+        return false
     }
 
-    // Reveal anim
     private func startRevealAnimation() {
         revealStep = -1
         let total = vm.embeddedPath.count
@@ -274,9 +255,7 @@ struct GameView: View {
 
     private func format(_ seconds: TimeInterval) -> String {
         let s = Int(max(0, seconds))
-        let h = s / 3600
-        let m = (s % 3600) / 60
-        let sec = s % 60
+        let h = s / 3600, m = (s % 3600) / 60, sec = s % 60
         return h > 0 ? String(format: "%d:%02d:%02d", h, m, sec) : String(format: "%d:%02d", m, sec)
     }
 }
