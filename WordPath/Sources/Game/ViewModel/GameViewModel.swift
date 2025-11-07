@@ -19,7 +19,7 @@ final class GameViewModel: ObservableObject {
     @Published var targetWord: String = ""
     @Published var embeddedPath: [GridPos] = []
 
-    @Published var secondsLeft: Int = 90
+    @Published var secondsLeft: Int = 0//90
     @Published var status: Status = .ready
     @Published var selectedPath: [GridPos] = []
     @Published var hintRevealed: Bool = false
@@ -47,6 +47,8 @@ final class GameViewModel: ObservableObject {
     var canPlay: Bool { economy.canPlay }
     var rechargeRemaining: TimeInterval? { economy.timeUntilRecharge() }
     var isPremium: Bool { subs.isPremium }
+    var onRoundFinished: ((Bool) -> Void)?   // win -> Bool
+    var isDaily: Bool = false                // marca si la ronda es “reto diario”
 
     enum Status: Equatable {
         case ready
@@ -72,6 +74,8 @@ final class GameViewModel: ObservableObject {
         guard canPlay else { return } // la vista ya muestra CTA “ver anuncio/suscribirse”
         do { try economy.startGame() } catch { return }
 
+        timer?.invalidate()
+        timer = nil
         hintRevealed = false
         selectedPath = []
         scoreAwarded = 0
@@ -79,6 +83,7 @@ final class GameViewModel: ObservableObject {
         status = .running
         lastEliminationTick = cfg.totalSeconds
         lastDragCell = nil
+        scheduleTick()
 
         var w = (wordsPool.randomElement() ?? "ALGORITMOS").uppercased()
         while w.count != cfg.wordLength { w = (wordsPool.randomElement() ?? "ALGORITMOS").uppercased() }
@@ -92,7 +97,8 @@ final class GameViewModel: ObservableObject {
             let fallback = Array("ABCDEFGHIJKLMNOP")
             cells = (0..<16).map { i in
                 let r = i / 4, c = i % 4
-                return Cell(id: i, pos: .init(row: r, col: c), letter: fallback[i], isTarget: false)
+                return Cell(pos: .init(row: r, col: c), letter: fallback[i], isTarget: false)
+                //return Cell(id: i, pos: .init(row: r, col: c), letter: fallback[i], isTarget: false)
             }
             embeddedPath = (0..<cfg.wordLength).map { GridPos(row: $0/4, col: $0%4) }
         }
@@ -144,6 +150,9 @@ final class GameViewModel: ObservableObject {
             Haptics.error(); SFX.error()
             selectedPath.removeAll()
         }
+
+        // 🔔 Notifica al que te haya inscrito el callback
+        onRoundFinished?(win)
     }
 
     private func startTimer() {
@@ -158,7 +167,7 @@ final class GameViewModel: ObservableObject {
     }
 
     private func handleTick() {
-        if !hintRevealed, secondsLeft == cfg.hintAt { hintRevealed = true; Haptics.select(); SFX.blip() }
+        if !hintRevealed, secondsLeft == cfg.autoHintAtSeconds { hintRevealed = true; Haptics.select(); SFX.blip() }
         if secondsLeft % cfg.eliminationInterval == 0, secondsLeft < lastEliminationTick {
             lastEliminationTick = secondsLeft
             eliminateOneNoiseCell(); SFX.tick()
@@ -267,5 +276,131 @@ final class GameViewModel: ObservableObject {
     func onAppearEconomyTick() {
         EconomyManager.shared.dailyResetIfNeeded()
         EconomyManager.shared.tickRechargeIfNeeded()
+    }
+
+    func scheduleTick() {
+        // Evita timers duplicados
+        timer?.invalidate()
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.tick()
+        }
+        RunLoop.main.add(timer!, forMode: .common)
+    }
+
+    private func tick() {
+        guard status == .running else { return }
+        guard secondsLeft > 0 else {
+            timer?.invalidate(); timer = nil
+            stopRound(win: false)
+            return
+        }
+
+        secondsLeft -= 1
+
+        // Pista automática a los 45s (no cuenta como pista manual)
+        if secondsLeft == cfg.roundSeconds - cfg.autoHintAtSeconds {
+            // En nuestro modelo: cfg.roundSeconds = 90, autoHintAtSeconds = 45
+            // Cuando quedan 45s, muestra la estrella en la primera letra
+            hintRevealed = true
+            Haptics.select(); SFX.blip()
+        }
+
+        // Cada 10s ocultar una letra de ruido (no perteneciente al path objetivo)
+        let elapsed = cfg.roundSeconds - secondsLeft
+        if elapsed > 0 && elapsed % cfg.noiseCullIntervalSeconds == 0 {
+            hideOneNoiseCell()
+        }
+    }
+
+    private func hideOneNoiseCell() {
+        // Candidatos: celdas que NO están en el path de la palabra y aún no están ocultas
+        let pathSet = Set(embeddedPath)
+        let candidates = cells.indices.filter { i in
+            !pathSet.contains(cells[i].pos) && !cells[i].isHiddenNoise
+        }
+        guard let pick = candidates.randomElement() else { return }
+        withAnimation(.easeOut(duration: 0.2)) {
+            cells[pick].isHiddenNoise = true
+        }
+    }
+}
+
+// En GameViewModel.swift
+extension GameViewModel {
+    /// Arranca una ronda DIARIA con seed y palabra forzadas. NO consume Economy.attempts.
+    func startDaily(seed: Int, forcedWord: String) {
+        // Limpia estado
+        timer?.invalidate(); timer = nil
+        selectedPath.removeAll()
+        hintedIndices.removeAll()
+        lastDragCell = nil
+
+        // Ajusta la palabra objetivo
+        targetWord = forcedWord
+        // Genera un grid determinista con seed para embebido del path
+        generateDeterministicGrid(seed: seed, word: forcedWord)
+
+        // Arranca el temporizador y estado
+        secondsLeft = cfg.roundSeconds
+        status = .running
+        scheduleTick() 
+    }
+
+    /// Genera grid/embeddedPath de forma determinista (ejemplo simple)
+    func generateDeterministicGrid(seed: Int, word: String) {
+        // 1) Genera un camino de 10 celdas únicas contiguas (usando un DRand similar)
+        struct DRand { var s: UInt64; mutating func next()->UInt64 { s = 6364136223846793005 &* s &+ 1442695040888963407; return s }
+            mutating func nextInt(_ u:Int)->Int { Int(next() % UInt64(u)) } }
+        var r = DRand(s: UInt64(bitPattern: Int64(seed)))
+
+        var path: [GridPos] = []
+        func neighbors(of p: GridPos) -> [GridPos] {
+            var arr:[GridPos]=[]
+            for dr in -1...1 {
+                for dc in -1...1 where !(dr == 0 && dc == 0) {
+                    let nr = p.row + dr, nc = p.col + dc
+                    if (0..<4).contains(nr) && (0..<4).contains(nc) {
+                        let np = GridPos(row: nr, col: nc)
+                        if !path.contains(np) { arr.append(np) }
+                    }
+                }
+            }
+            return arr
+        }
+        // elige inicio aleatorio
+        var start = GridPos(row: r.nextInt(4), col: r.nextInt(4))
+        path.append(start)
+        while path.count < word.count {
+            let opts = neighbors(of: start)
+            if opts.isEmpty {
+                // reset si nos atascamos
+                path.removeAll()
+                start = GridPos(row: r.nextInt(4), col: r.nextInt(4))
+                path.append(start)
+                continue
+            }
+            let next = opts[r.nextInt(opts.count)]
+            path.append(next)
+            start = next
+        }
+        embeddedPath = path
+
+        // 2) Rellena celdas con las letras de la palabra en el path y ruido en el resto
+        var letters = Array(word).map { Character(String($0).uppercased()) }
+        var allCells: [Cell] = []
+        for row in 0..<4 {
+            for col in 0..<4 {
+                let pos = GridPos(row: row, col: col)
+                if let idx = path.firstIndex(of: pos) {
+                    allCells.append(Cell(pos: pos, letter: letters[idx], isHiddenNoise: false))
+                } else {
+                    // ruido: letra aleatoria A..Z
+                    let code = 65 + r.nextInt(26)
+                    let ch = Character(UnicodeScalar(code)!)
+                    allCells.append(Cell(pos: pos, letter: ch, isHiddenNoise: false))
+                }
+            }
+        }
+        cells = allCells
     }
 }
