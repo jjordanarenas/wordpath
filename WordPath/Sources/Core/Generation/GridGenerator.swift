@@ -59,11 +59,13 @@ struct GridGenerator {
             for c in 0..<size {
                 let p = GridPos(row: r, col: c)
                 if let idx = path.firstIndex(of: p) {
-                    cells.append(Cell(id: p.id, pos: p, letter: letters[idx], isTarget: true))
+                   // cells.append(Cell(id: p.id, pos: p, letter: letters[idx], isTarget: true))
+                    cells.append(Cell(pos: p, letter: letters[idx], isTarget: true))
                 } else {
                     var ch = alphabet.randomElement()!
                     if ch == letters.first { ch = alphabet.randomElement()! } // evita pista accidental
-                    cells.append(Cell(id: p.id, pos: p, letter: ch, isTarget: false))
+                    cells.append(Cell(pos: p, letter: ch, isTarget: false))
+                    //cells.append(Cell(id: p.id, pos: p, letter: ch, isTarget: false))
                 }
             }
         }

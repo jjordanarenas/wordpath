@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct GameView: View {
-    @StateObject private var vm = GameViewModel()
+    @StateObject private var vm: GameViewModel
     @ObservedObject private var theme = ThemeManager.shared
 
     @State private var revealStep: Int = -1
@@ -16,6 +16,21 @@ struct GameView: View {
 
     private let cellSize: CGFloat = 72
     private let spacing: CGFloat = 12
+    private var onDailyFinished: (() -> Void)?
+
+    // 1) Init cuando ya traes un VM (p. ej., desde el reto diario)
+    @MainActor
+    init(viewModel: GameViewModel, onDailyFinished: (() -> Void)? = nil) {
+        _vm = StateObject(wrappedValue: viewModel)
+        self.onDailyFinished = onDailyFinished
+    }
+
+    // 2) Init “por defecto” que crea el VM en el MainActor (para Home → Jugar)
+    @MainActor
+    init(onDailyFinished: (() -> Void)? = nil) {
+        _vm = StateObject(wrappedValue: GameViewModel())
+        self.onDailyFinished = onDailyFinished
+    }
 
     var body: some View {
         ZStack {
