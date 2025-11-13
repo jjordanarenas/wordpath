@@ -35,7 +35,7 @@ struct GameView: View {
     var body: some View {
         ZStack {
             // FONDO DEL TEMA
-            theme.current.background
+            theme.effectiveTheme.animatedBackground()
                 .ignoresSafeArea()
 
             VStack(spacing: 12) {
@@ -96,12 +96,12 @@ struct GameView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("WORDPATH")
                     .font(.title.bold())
-                    .foregroundStyle(theme.current.textPrimary)
+                    .foregroundStyle(theme.effectiveTheme.textPrimary)
 
                 if vm.hintRevealed || vm.status != .running {
                     Text("Empieza por: \(vm.targetWord.first.map { String($0) } ?? "?")")
                         .font(.footnote.monospaced())
-                        .foregroundStyle(theme.current.textSecondary)
+                        .foregroundStyle(theme.effectiveTheme.textSecondary)
                         .transition(.opacity)
                 } else {
                     Text(" ")
@@ -115,10 +115,10 @@ struct GameView: View {
             VStack(alignment: .trailing, spacing: 2) {
                 if vm.status == .running {
                     Text("Tiempo")
-                        .foregroundStyle(theme.current.textSecondary)
+                        .foregroundStyle(theme.effectiveTheme.textSecondary)
                     Text(timeString(vm.secondsLeft))
                         .font(.system(size: 32, weight: .bold, design: .rounded))
-                        .foregroundStyle(theme.current.textPrimary)
+                        .foregroundStyle(theme.effectiveTheme.textPrimary)
                         .contentTransition(.numericText())
                 } else if case .finished(let win) = vm.status {
                     Text(win ? "+\(vm.scoreAwarded)" : "💔")
@@ -135,17 +135,17 @@ struct GameView: View {
             HStack(spacing: 6) {
                 Text("💛 \(vm.attempts)")
                     .font(.headline.monospacedDigit())
-                    .foregroundStyle(theme.current.textPrimary)
+                    .foregroundStyle(theme.effectiveTheme.textPrimary)
                 if let remain = vm.rechargeRemaining, vm.attempts == 0 {
                     Text("⏳ \(format(remain))")
                         .font(.caption)
-                        .foregroundStyle(theme.current.textSecondary)
+                        .foregroundStyle(theme.effectiveTheme.textSecondary)
                 }
             }
             Spacer()
             Text("🟡 \(vm.coins)")
                 .font(.headline.monospacedDigit())
-                .foregroundStyle(theme.current.textPrimary)
+                .foregroundStyle(theme.effectiveTheme.textPrimary)
         }
     }
 
@@ -163,7 +163,7 @@ struct GameView: View {
                             glow: glowState(for: cell),
                             orderIndex: orderInfo.number,
                             isHint: orderInfo.isHint,
-                            theme: theme.current
+                            theme: theme.effectiveTheme
                         )
                         .frame(width: cellSize, height: cellSize)
                         .onTapGesture { vm.tapCell(cell) }
