@@ -25,7 +25,7 @@ struct DailyChallengeView: View {
             Spacer()
         }
         .padding()
-        .background(theme.current.background.ignoresSafeArea())
+        .background(theme.effectiveTheme.animatedBackground().ignoresSafeArea())
         .navigationTitle("Reto diario")
         .onAppear {
             // refrescar por si cambia de día
@@ -50,9 +50,9 @@ struct DailyChallengeView: View {
         VStack(spacing: 6) {
             Text("WORDPATH")
                 .font(.title.bold())
-                .foregroundStyle(theme.current.textPrimary)
+                .foregroundStyle(theme.effectiveTheme.textPrimary)
             Text("Reto del \(daily.lastPlayedYMD)")
-                .foregroundStyle(theme.current.textSecondary)
+                .foregroundStyle(theme.effectiveTheme.textSecondary)
         }
     }
 
@@ -69,10 +69,10 @@ struct DailyChallengeView: View {
                 Text("Gratis/día: \(daily.freeTriesPerDay)")
             }
             .font(.subheadline)
-            .foregroundStyle(theme.current.textSecondary)
+            .foregroundStyle(theme.effectiveTheme.textSecondary)
         }
         .padding()
-        .themedBackground(theme.current.cardBackground, cornerRadius: 16)
+        .themedBackground(theme.effectiveTheme.cardBackground, cornerRadius: 16)
     }
 
     private var rulesCard: some View {
@@ -85,8 +85,8 @@ struct DailyChallengeView: View {
             Text("• No consume tus intentos normales.")
         }
         .padding()
-        .themedBackground(theme.current.cardBackground, cornerRadius: 16)
-        .foregroundStyle(theme.current.textPrimary)
+        .themedBackground(theme.effectiveTheme.cardBackground, cornerRadius: 16)
+        .foregroundStyle(theme.effectiveTheme.textPrimary)
     }
 
     private var ctaButtons: some View {
@@ -113,7 +113,7 @@ struct DailyChallengeView: View {
             if !daily.freeTryAvailable && !daily.completed {
                 Text("No te queda intento gratis. Puedes reintentar por \(daily.extraTryCostCoins) coins.")
                     .font(.footnote)
-                    .foregroundStyle(theme.current.textSecondary)
+                    .foregroundStyle(theme.effectiveTheme.textSecondary)
             }
         }
         .padding(.top, 8)

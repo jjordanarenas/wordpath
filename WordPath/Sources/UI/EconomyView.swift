@@ -26,7 +26,7 @@ struct EconomyView: View {
             }
             .padding()
         }
-        .background(theme.current.background.ignoresSafeArea())  // opcional, para unificar estilo
+        .background(theme.effectiveTheme.animatedBackground().ignoresSafeArea())  // opcional, para unificar estilo
         .navigationTitle("Economía")
         .onAppear {
             MissionsManager.shared.dailyResetIfNeeded()
@@ -48,7 +48,7 @@ struct EconomyView: View {
             Text("Coins: \(economy.coins)")
         }
         .font(.headline.monospacedDigit())
-        .foregroundStyle(theme.current.textPrimary)
+        .foregroundStyle(theme.effectiveTheme.textPrimary)
     }
 
     private var attemptsCard: some View {
@@ -58,7 +58,7 @@ struct EconomyView: View {
             Text(subs.isPremium ? "Ilimitados por ser Premium." : "Tienes \(economy.attempts) intentos. Al llegar a 0, se recargan 10 tras 24 horas.")
         }
         .padding()
-        .themedBackground(theme.current.cardBackground, cornerRadius: 16)   // 👈 aquí
+        .themedBackground(theme.effectiveTheme.cardBackground, cornerRadius: 16)   // 👈 aquí
     }
 
     private var coinsCard: some View {
@@ -68,7 +68,7 @@ struct EconomyView: View {
             Text("Gana coins con misiones diarias. Límite diario: \(subs.isPremium ? EconomyConfig.premiumDailyCoinsCap : EconomyConfig.freeDailyCoinsCap).")
         }
         .padding()
-        .themedBackground(theme.current.cardBackground, cornerRadius: 16)
+        .themedBackground(theme.effectiveTheme.cardBackground, cornerRadius: 16)
     }
 
     private var missionsCard: some View {
@@ -81,7 +81,7 @@ struct EconomyView: View {
             }
         }
         .padding()
-        .themedBackground(theme.current.cardBackground, cornerRadius: 16)
+        .themedBackground(theme.effectiveTheme.cardBackground, cornerRadius: 16)
     }
 
     private func missionRow(type: MissionType) -> some View {
@@ -89,10 +89,10 @@ struct EconomyView: View {
         return HStack {
             VStack(alignment: .leading) {
                 Text(title(for: type))
-                    .foregroundStyle(theme.current.textPrimary)
+                    .foregroundStyle(theme.effectiveTheme.textPrimary)
                 Text("Progreso: \(m.progress)/\(m.goal) · Recompensa: \(m.rewardCoins) 🟡")
                     .font(.caption)
-                    .foregroundStyle(theme.current.textSecondary)
+                    .foregroundStyle(theme.effectiveTheme.textSecondary)
             }
             Spacer()
             if missions.canClaim(type) {

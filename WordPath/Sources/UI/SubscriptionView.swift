@@ -37,7 +37,7 @@ struct SubscriptionView: View {
             Spacer()
         }
         .padding()
-        .background(theme.current.background.ignoresSafeArea())  // opcional
+        .background(theme.effectiveTheme.animatedBackground().ignoresSafeArea())  // opcional
         .navigationTitle("WordPath+")
     }
 
@@ -45,10 +45,10 @@ struct SubscriptionView: View {
         VStack(spacing: 8) {
             Text("Desbloquea WordPath+")
                 .font(.title.bold())
-                .foregroundStyle(theme.current.textPrimary)
+                .foregroundStyle(theme.effectiveTheme.textPrimary)
             Text("Partidas ilimitadas, misiones Premium y más opciones de personalización.")
                 .multilineTextAlignment(.center)
-                .foregroundStyle(theme.current.textSecondary)
+                .foregroundStyle(theme.effectiveTheme.textSecondary)
         }
     }
 
@@ -56,12 +56,12 @@ struct SubscriptionView: View {
         HStack {
             VStack(alignment: .leading) {
                 Text(product.displayName).font(.headline)
-                    .foregroundStyle(theme.current.textPrimary)
-                Text(product.description).font(.caption).foregroundStyle(theme.current.textSecondary)
+                    .foregroundStyle(theme.effectiveTheme.textPrimary)
+                Text(product.description).font(.caption).foregroundStyle(theme.effectiveTheme.textSecondary)
             }
             Spacer()
             Text(product.displayPrice).font(.headline)
-                .foregroundStyle(theme.current.textPrimary)
+                .foregroundStyle(theme.effectiveTheme.textPrimary)
             Button(subs.purchasing ? "Comprando…" : "Suscribirse") {
                 Task { await subs.purchase(product) }
             }
@@ -69,6 +69,6 @@ struct SubscriptionView: View {
             .disabled(subs.purchasing)
         }
         .padding()
-        .themedBackground(theme.current.cardBackground, cornerRadius: 16)   // 👈 aquí
+        .themedBackground(theme.effectiveTheme.cardBackground, cornerRadius: 16)   // 👈 aquí
     }
 }

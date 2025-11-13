@@ -141,6 +141,7 @@ final class GameViewModel: ObservableObject {
         // ✅ MISIÓN: ha jugado 1 partida (incrementa progreso de play1 y play3)
         MissionsManager.shared.markProgress(.play1)
         MissionsManager.shared.markProgress(.play3)
+        StatsManager.shared.registerGame(win: win)
 
         if win {
             Haptics.success();

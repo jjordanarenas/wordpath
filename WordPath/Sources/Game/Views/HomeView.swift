@@ -132,10 +132,27 @@ struct HomeView: View {
                         NavigationLink {
                             SettingsView()
                         } label: {
-                            Label("Opciones", systemImage: "gearshape")
+                            Label("Ajustes", systemImage: "gearshape.fill")
                         }
                         .buttonStyle(.bordered)
-                        .tint(.white.opacity(0.4))
+                        .tint(.white.opacity(0.6))
+
+                        NavigationLink {
+                            ThemesView()
+                        } label: {
+                            Label("Temas", systemImage: "paintpalette.fill")
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.white.opacity(0.6))
+
+                        NavigationLink {
+                            StatisticsView()
+                        } label: {
+                            Label("Estadísticas", systemImage: "chart.bar.fill")
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.white.opacity(0.6))
+
                     }
                     .font(.footnote)
                     .frame(maxWidth: .infinity)
