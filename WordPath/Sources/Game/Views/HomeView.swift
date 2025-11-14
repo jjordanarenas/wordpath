@@ -97,6 +97,7 @@ struct HomeView: View {
 
                         Button {
                             Task { @MainActor in
+                                await GameCenterService.shared.ensureAuthenticated()
                                 GameCenterService.shared.showLeaderboards()
                             }
                         } label: {
