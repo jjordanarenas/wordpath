@@ -11,12 +11,23 @@ import Foundation
 enum DailyWordbook {
     // ⚠️ Sustituye por tu diccionario real de 10 letras (todas mayúsculas)
     static let words10: [String] = [
-        "ALGORITMOS","PROGRAMADO","DESARROLLO","INTERFACES","MICROCHIPT", // ejemplo
-        "COMPUTADOR","FRAMEWORKS","INFOTECNIA","TRANSFORME","APLICACION"
+        "ALGORITMOS","ALMACENADO","ALTERNADOR","ANTIAEREOS",/*"ARQUITECTO","ATMOSFERAS",
+        "AEROPUERTO","AERONAUTAS","BIOGRAFIAS","BIBLIOTECA","BOTELLAZOS","BUSCADORES",
+        "CALENDARIO","CALIBRADOR","CAPITANEOS","CARRETERAS","CARTOGRAFO","CIRCULARES",
+        "COMPUTADOR","COMBUSTION","CONTRATADO","DIRECTORIO","ENCRIPTADO","EQUILIBRIO",
+        "FABRICANTE","FOTOGRAFIA","FRAGMENTOS","FUNCIONADO","GENERADORES","GEOMETRICO",
+        "GOBERNADOR","HIPERTEXTO","HUMANIDADES","ILUMINADOR","IMPRESORAS","INDICADORES",
+        "INGENIEROS","JARDINEROS","JUGUETERIA","LANZADORES","LATERALIDAD","LIDERAZGOS",
+        "MAGNETICAS","MANTENEDOR","MATRICULAS","METALURGIA","MICROFONOS","NAVEGACION",
+        "NEBULOSIDAD","NORMALIDAD","OPERACIONES","ORBITACION","ORGANIZADO","ORQUESTADO",
+        "PARTITURAL","PERFORADOR","PLANETARIO","PROGRAMADO","RADARISTAS","RASTREADOR",
+        "REACTIVADO","REGULACION","RENDIMIENTO","SOBRECARGA","SUBSISTEMA","TERRITORIO",
+        "TERMOSTATO","TRANSVERSO","TRIANGULAR","TURBINADOS","UNIVERSIDAD","URBANISTAS",
+        "VENTILADOR","VERIFICADO","XILOFONIAS","YODIFICADO","ZAPATERIAS","ZONIFICADO"*/
     ].filter { $0.count == 10 }
 
     /// Devuelve un entero semilla estable a partir de yyyy-MM-dd (zona local)
-    static func dailySeed(date: Date = Date()) -> Int {
+    static func dailySeed(for date: Date = Date()) -> Int {
         let cal = Calendar.current
         let comps = cal.dateComponents([.year,.month,.day], from: date)
         // hash simple
@@ -38,8 +49,9 @@ enum DailyWordbook {
 
     /// Palabra de 10 letras para el día
     static func wordForToday(seed: Int) -> String {
-        guard !words10.isEmpty else { return "ALGORITMOS" }
-        var r = DRand(seed: seed)
-        return words10[r.nextInt(words10.count)]
+        // aquí tu lista de palabras y rng determinista con seed
+        let words = ["ALGORITMOS","ALMACENADO","ALTERNADOR","ANTIAEREOS"]
+        var rng = SeededRandomNumberGenerator(seed: UInt64(seed))
+        return words.randomElement(using: &rng) ?? "ALGORITMOS"
     }
 }

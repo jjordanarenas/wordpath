@@ -16,6 +16,10 @@ struct DailyChallengeView: View {
     @StateObject private var vm = GameViewModel() // VM que usaremos para la partida diaria
     @State private var showingGame = false
 
+    #if DEBUG
+    @State private var debugOffsetDays: Int = 0
+    #endif
+
     var body: some View {
         VStack(spacing: 16) {
             header
@@ -23,6 +27,11 @@ struct DailyChallengeView: View {
             rulesCard
             ctaButtons
             Spacer()
+        }
+        VStack(spacing: 16) {
+            #if DEBUG
+            debugPanel
+            #endif
         }
         .padding()
         .background(theme.effectiveTheme.animatedBackground().ignoresSafeArea())
@@ -45,6 +54,43 @@ struct DailyChallengeView: View {
             }
         }
     }
+
+    #if DEBUG
+    private var debugPanel: some View {
+        VStack(spacing: 8) {
+            Text("DEBUG: Palabra del día")
+                .font(.caption.bold())
+                .foregroundStyle(.yellow)
+
+            HStack {
+                Button("-1 día") { shiftDay(-1) }
+                Button("+1 día") { shiftDay(1) }
+            }
+            .buttonStyle(.bordered)
+
+            Text("Seed: \(daily.seed)")
+                .font(.caption2)
+                .foregroundStyle(theme.effectiveTheme.textSecondary)
+            Text("Target: \(daily.targetWord)")
+                .font(.caption2)
+                .foregroundStyle(theme.effectiveTheme.textSecondary)
+        }
+        .padding(8)
+        .background(.black.opacity(0.3), in: RoundedRectangle(cornerRadius: 12))
+        .padding(.top, 16)
+    }
+    #endif
+
+    #if DEBUG
+    private func shiftDay(_ delta: Int) {
+        debugOffsetDays += delta
+        let cal = Calendar(identifier: .gregorian)
+        let base = Date()
+        guard let newDate = cal.date(byAdding: .day, value: debugOffsetDays, to: base) else { return }
+
+        daily.debugShift(to: newDate)
+    }
+    #endif
 
     private var header: some View {
         VStack(spacing: 6) {

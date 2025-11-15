@@ -110,7 +110,18 @@ struct HomeView: View {
                     .padding(.horizontal, 4)
 
                     Spacer()
-
+                    // FILA MEDIA:
+                    HStack(spacing: 14) {
+                        NavigationLink {
+                            DailyChallengeView()
+                        } label: {
+                            Label("Reto diario", systemImage: "flame.fill")
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
+                    Spacer()
                     // FILA INFERIOR: Premium + Tutorial + Opciones
                     HStack(spacing: 14) {
                         NavigationLink {
