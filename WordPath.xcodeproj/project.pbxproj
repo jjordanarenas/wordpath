@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXContainerItemProxy section */
+		6F02CFE12EC7A2F800A5FE92 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6F9DE32D2EA75E8600A44F07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6F9DE3342EA75E8600A44F07;
+			remoteInfo = WordPath;
+		};
 		6F9DE3432EA75E8C00A44F07 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 6F9DE32D2EA75E8600A44F07 /* Project object */;
@@ -24,12 +31,18 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		6F02CFDD2EC7A2F800A5FE92 /* WordPathUnitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WordPathUnitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F9DE3352EA75E8600A44F07 /* WordPath.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WordPath.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F9DE3422EA75E8C00A44F07 /* WordPathTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WordPathTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F9DE34C2EA75E8C00A44F07 /* WordPathUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WordPathUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		6F02CFDE2EC7A2F800A5FE92 /* WordPathUnitTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = WordPathUnitTests;
+			sourceTree = "<group>";
+		};
 		6F9DE3372EA75E8600A44F07 /* WordPath */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = WordPath;
@@ -48,6 +61,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		6F02CFDA2EC7A2F800A5FE92 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6F9DE3322EA75E8600A44F07 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -78,6 +98,7 @@
 				6F9DE3372EA75E8600A44F07 /* WordPath */,
 				6F9DE3452EA75E8C00A44F07 /* WordPathTests */,
 				6F9DE34F2EA75E8C00A44F07 /* WordPathUITests */,
+				6F02CFDE2EC7A2F800A5FE92 /* WordPathUnitTests */,
 				6F9DE3362EA75E8600A44F07 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -88,6 +109,7 @@
 				6F9DE3352EA75E8600A44F07 /* WordPath.app */,
 				6F9DE3422EA75E8C00A44F07 /* WordPathTests.xctest */,
 				6F9DE34C2EA75E8C00A44F07 /* WordPathUITests.xctest */,
+				6F02CFDD2EC7A2F800A5FE92 /* WordPathUnitTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,6 +117,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		6F02CFDC2EC7A2F800A5FE92 /* WordPathUnitTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6F02CFE32EC7A2F800A5FE92 /* Build configuration list for PBXNativeTarget "WordPathUnitTests" */;
+			buildPhases = (
+				6F02CFD92EC7A2F800A5FE92 /* Sources */,
+				6F02CFDA2EC7A2F800A5FE92 /* Frameworks */,
+				6F02CFDB2EC7A2F800A5FE92 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6F02CFE22EC7A2F800A5FE92 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				6F02CFDE2EC7A2F800A5FE92 /* WordPathUnitTests */,
+			);
+			name = WordPathUnitTests;
+			packageProductDependencies = (
+			);
+			productName = WordPathUnitTests;
+			productReference = 6F02CFDD2EC7A2F800A5FE92 /* WordPathUnitTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		6F9DE3342EA75E8600A44F07 /* WordPath */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 6F9DE3562EA75E8C00A44F07 /* Build configuration list for PBXNativeTarget "WordPath" */;
@@ -173,6 +218,10 @@
 				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
+					6F02CFDC2EC7A2F800A5FE92 = {
+						CreatedOnToolsVersion = 16.4;
+						TestTargetID = 6F9DE3342EA75E8600A44F07;
+					};
 					6F9DE3342EA75E8600A44F07 = {
 						CreatedOnToolsVersion = 16.4;
 					};
@@ -203,11 +252,19 @@
 				6F9DE3342EA75E8600A44F07 /* WordPath */,
 				6F9DE3412EA75E8C00A44F07 /* WordPathTests */,
 				6F9DE34B2EA75E8C00A44F07 /* WordPathUITests */,
+				6F02CFDC2EC7A2F800A5FE92 /* WordPathUnitTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		6F02CFDB2EC7A2F800A5FE92 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6F9DE3332EA75E8600A44F07 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -232,6 +289,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		6F02CFD92EC7A2F800A5FE92 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6F9DE3312EA75E8600A44F07 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -256,6 +320,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		6F02CFE22EC7A2F800A5FE92 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6F9DE3342EA75E8600A44F07 /* WordPath */;
+			targetProxy = 6F02CFE12EC7A2F800A5FE92 /* PBXContainerItemProxy */;
+		};
 		6F9DE3442EA75E8C00A44F07 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 6F9DE3342EA75E8600A44F07 /* WordPath */;
@@ -269,6 +338,42 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		6F02CFE42EC7A2F800A5FE92 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = WCKPXB57CT;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jjordanarenas.WordPathUnitTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WordPath.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WordPath";
+			};
+			name = Debug;
+		};
+		6F02CFE52EC7A2F800A5FE92 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = WCKPXB57CT;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jjordanarenas.WordPathUnitTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WordPath.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/WordPath";
+			};
+			name = Release;
+		};
 		6F9DE3542EA75E8C00A44F07 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -523,6 +628,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		6F02CFE32EC7A2F800A5FE92 /* Build configuration list for PBXNativeTarget "WordPathUnitTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6F02CFE42EC7A2F800A5FE92 /* Debug */,
+				6F02CFE52EC7A2F800A5FE92 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		6F9DE3302EA75E8600A44F07 /* Build configuration list for PBXProject "WordPath" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
